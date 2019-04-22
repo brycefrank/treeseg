@@ -2,26 +2,32 @@ import unittest
 import rasterio
 import numpy as np
 from treeseg import *
+from pyproj import Proj
 
 rasterio_object = rasterio.open('data/test.tif')
-
+array = rasterio_object.read(1)
 
 # TODO consider only using arrays, crs, and affine as needed arguments
-class RasterBaseTestCase(unittest.TestCase):
+class HeightModelTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.test_rb = base.RasterBase(rasterio_object)
+        cls.test_hm_array = base.HeightModel(array)
+
+    def test_array_load_no_crs_no_affine(self):
+        # Test default behavior
+        self.assertEqual(type(self.test_hm_array.array), np.ndarray)
+        self.assertIsNone(self.test_hm_array.crs)
+        self.assertIsNone(self.test_hm_array.affine)
+
+    def test_array_load_bad_projection(self):
+        self.assertWarns(UserWarning, base.HeightModel, (array), {'crs': {'init': 'epsg:3007asdf'}})
+
+    def test_array_load_crs_no_affine(self):
+        base.HeightModel(array, crs={'init': 'epsg:3007'})
+        self.assertEqual(type(self.test_hm_array.array), np.ndarray)
+        self.assertIsNone(self.test_hm_array.crs)
+        self.assertIsNone(self.test_hm_array.affine)
+
 
     def test_obj_load(self):
-        self.assertEqual(type(self.test_rb.array), np.ndarray)
-
-    def test_array_load(self):
-        test_rb_array = base.RasterBase.from_array(rasterio_object.read(1))
-        self.assertEqual(type(test_rb_array.array), np.ndarray)
-
-
-class DetectedTopsTestCase(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        test_d = detection.DetectedTops(rasterio_object)
-        test_d = detection.DetectedTops.from_array(rasterio_object.read(1))
+        self.assertEqual(type(self.test_hm_array.array), np.ndarray)
