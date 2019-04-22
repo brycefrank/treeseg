@@ -1,6 +1,6 @@
-class DetectedTops:
-    def __init__(self, raster):
-        pass
+from treeseg.base import RasterBase
+
+class DetectedTops(RasterBase):
 
     def local_maxima(self):
-        pass
+        print(self.array)
