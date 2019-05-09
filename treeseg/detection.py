@@ -28,7 +28,7 @@ class FixedWindowLocalMaxima:
         :return: An integer representing the number of pixels considered for minimum distance.
         """
 
-        return self.min_distance / affine[0]
+        return int(np.floor(self.min_distance / affine[0]))
 
     def detect(self, height_model):
         from skimage.feature import peak_local_max
@@ -38,8 +38,9 @@ class FixedWindowLocalMaxima:
         else:
             pixel_min_dist = self.min_distance
 
-        detect_array = peak_local_max(height_model.array, min_distance=self.min_distance, threshold_abs=self.threshold_abs,
+        detect_array = peak_local_max(height_model.array, min_distance=pixel_min_dist, threshold_abs=self.threshold_abs,
                        exclude_border=self.exclude_border, num_peaks=self.num_peaks, indices=False)
+
 
         return DetectionBase(detect_array, height_model)
 

@@ -1,4 +1,6 @@
 from pyproj import Proj
+import geopandas as gpd
+from shapely.geometry import Point, Polygon
 import numpy as np
 
 class HeightModel:
@@ -9,6 +11,9 @@ class HeightModel:
         self.crs = crs
         self.array = array
         self.affine = affine
+
+        self.cell_size_x = self.affine[0]
+        self.cell_size_y = abs(self.affine[4])
 
     @classmethod
     def from_rasterio(cls, rasterio_obj):
@@ -25,6 +30,18 @@ class HeightModel:
         else:
             return cls(pyfor_raster.array, crs=None, affine=None)
 
+    @property
+    def _bounding_box(self):
+        min_x, max_y = self.affine[2], self.affine[5]
+        max_x, min_y = min_x + self.cell_size_x * self.array.shape[1], max_y - self.cell_size_y * self.array.shape[0]
+        return(min_x, max_x, min_y, max_y)
+
+    @property
+    def _bounding_box_poly(self):
+        min_x, max_x, min_y, max_y = self._bounding_box
+        return Polygon([[min_x, min_y], [min_x, max_y], [max_x, max_y], [max_x, min_y]])
+
+
     def plot(self):
         pass
 
@@ -35,6 +52,44 @@ class DetectionBase:
     def __init__(self, detected, height_model):
         self.detected = detected
         self.height_model = height_model
+
+    def project_indices(self, indices):
+        max_y = self.height_model._bounding_box[3]
+        min_x = self.height_model._bounding_box[0]
+
+        seed_xy = indices[:, 1] * self.height_model.cell_size_x + min_x, max_y - (indices[:,0] * self.height_model.cell_size_y)
+        seed_xy = np.stack(seed_xy, axis = 1)
+        seed_xy[:, 0], seed_xy[:,1] = seed_xy[:, 0] + (self.height_model.cell_size_x / 2), seed_xy[:,1] - (self.height_model.cell_size_y / 2)
+
+        return seed_xy
+
+    @property
+    def _coords_array_single(self):
+        from scipy.ndimage.measurements import center_of_mass, label
+
+        labels = label(self.detected)[0]
+        centers = center_of_mass(self.detected, labels, range(1, np.max(labels)+1))
+        centers = np.array(centers)
+        return self.project_indices(centers)
+
+    @property
+    def _coords_array_multiple(self):
+        indices = np.stack(np.where(self.detected), axis=1)
+        return self.project_indices(indices)
+
+    @property
+    def points(self, single=True):
+        """
+        Returns a GeoSeries of point geometries.
+        """
+        if single:
+            coords = self._coords_array_single
+        else:
+            coords = self._coords_array_multiple
+
+        series = gpd.GeoSeries([Point(xy) for xy in coords])
+        series.crs = self.height_model.crs
+        return series
 
     def plot(self):
         import matplotlib.pyplot as plt
@@ -51,5 +106,18 @@ class DetectionBase:
 
 
 class SegmentBase:
-    def __init__(self, height_model):
-        pass
+    def __init__(self, seg_list, height_model):
+        self.seg_list = seg_list
+        self.height_model = height_model
+
+    @property
+    def segments(self):
+
+        series = gpd.GeoSeries(self.seg_list)
+
+        # Clip to bounding box
+        bbox = self.height_model._bounding_box_poly
+        series = series.intersection(bbox)
+
+        series.crs = self.height_model.crs
+        return series

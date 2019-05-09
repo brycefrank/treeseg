@@ -25,6 +25,7 @@ Please send your suggestions to the [issues](https://github.com/brycefrank/trees
 - pyproj
 - rasterio
 - scipy
+- geopandas
 ```
 
 ## Installation
