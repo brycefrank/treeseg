@@ -2,6 +2,7 @@ from pyproj import Proj
 import geopandas as gpd
 from shapely.geometry import Point, Polygon
 import numpy as np
+import rasterio
 
 class HeightModel:
     """
@@ -20,8 +21,9 @@ class HeightModel:
         pass
 
     @classmethod
-    def from_tif(cls):
-        pass
+    def from_tif(cls, tif_path):
+        with rasterio.open(tif_path, 'r') as rast:
+            return cls(rast.read(1), crs=rast.crs, affine=rast.transform)
 
     @classmethod
     def from_pyfor(cls, pyfor_raster):
@@ -64,13 +66,19 @@ class DetectionBase:
         return seed_xy
 
     @property
-    def _coords_array_single(self):
+    def _indices_single(self):
+        """
+        :return: A boolean array of detected tops for the height model.
+        """
         from scipy.ndimage.measurements import center_of_mass, label
-
         labels = label(self.detected)[0]
         centers = center_of_mass(self.detected, labels, range(1, np.max(labels)+1))
         centers = np.array(centers)
-        return self.project_indices(centers)
+        return centers
+
+    @property
+    def _coords_array_single(self):
+        return self.project_indices(self._indices_single)
 
     @property
     def _coords_array_multiple(self):
@@ -105,19 +113,4 @@ class DetectionBase:
         ax.imshow(container)
 
 
-class SegmentBase:
-    def __init__(self, seg_list, height_model):
-        self.seg_list = seg_list
-        self.height_model = height_model
 
-    @property
-    def segments(self):
-
-        series = gpd.GeoSeries(self.seg_list)
-
-        # Clip to bounding box
-        bbox = self.height_model._bounding_box_poly
-        series = series.intersection(bbox)
-
-        series.crs = self.height_model.crs
-        return series
