@@ -13,7 +13,9 @@ For general LiDAR processing tasks (e.g. normalization, canopy height models, et
 ### Detection
 
 - [x] `FixedWindowLocalMaxima`
-- [ ] `VariableWindowLocalMaxima`
+- [x] `VariableWindowLocalMaxima`
+
+![alt text](docs/vwlm.png)
 
 ### Segmentation
 

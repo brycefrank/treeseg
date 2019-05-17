@@ -34,7 +34,6 @@ class HeightModelPlot:
         from descartes import PolygonPatch
 
         for poly in polys:
-            patch = PolygonPatch(poly, facecolor='#cccccc', edgecolor='#999999', alpha = 1)
-            patch.set_facecolor('none')
+            patch = PolygonPatch(poly, facecolor='none', edgecolor='#ffffff', alpha = 1)
             self.ax.add_patch(patch)
 

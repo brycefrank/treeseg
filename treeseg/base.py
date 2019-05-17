@@ -3,6 +3,7 @@ import geopandas as gpd
 from shapely.geometry import Point, Polygon
 import numpy as np
 import rasterio
+import matplotlib.pyplot as plt
 
 class HeightModel:
     """
@@ -102,9 +103,29 @@ class DetectionBase:
         series.crs = self.height_model.crs
         return series
 
-    def plot(self):
+    def plot(self, show=True):
         from treeseg.plot import HeightModelPlot
-        import matplotlib.pyplot as plt
         hmplot = HeightModelPlot(self.height_model)
         hmplot.append_bool(self.detected)
+
+        if show:
+            plt.show()
+        else:
+            return hmplot
+
+class SegmentationBase:
+    def __init__(self, polys, detection_base):
+        # TODO implies segmentation always happens after detection (not always true)
+        self.detection_base = detection_base
+        self.polys = polys # A list?
+
+    @property
+    def segments(self):
+        pass
+
+    def plot(self):
+        hmplot = self.detection_base.plot(show=False)
+        hmplot.append_polys(self.polys)
         plt.show()
+
+

@@ -1,5 +1,5 @@
 import numpy as np
-from treeseg.base import DetectionBase
+from treeseg.base import DetectionBase, SegmentationBase
 
 class LocalMaximaBase:
     """
@@ -189,6 +189,11 @@ class VariableWindowLocalMaxima(LocalMaximaBase):
 
         detected = np.zeros(array.shape)
         detected[max_rows, max_cols] = 1
-        self._diagnostic_plot(polys, height_model, detected)
-        return DetectionBase(detected, height_model)
+
+        db = DetectionBase(detected, height_model)
+
+        if diagnostic:
+            return SegmentationBase(polys, db)
+        else:
+            return DetectionBase(detected, height_model)
 
