@@ -43,9 +43,12 @@ class HeightModel:
         min_x, max_x, min_y, max_y = self._bounding_box
         return Polygon([[min_x, min_y], [min_x, max_y], [max_x, max_y], [max_x, min_y]])
 
-
     def plot(self):
-        pass
+        from treeseg.plot import HeightModelPlot
+        import matplotlib.pyplot as plt
+        hmplot = HeightModelPlot(self)
+        plt.show()
+
 
 class DetectionBase:
     """
@@ -100,17 +103,8 @@ class DetectionBase:
         return series
 
     def plot(self):
+        from treeseg.plot import HeightModelPlot
         import matplotlib.pyplot as plt
-
-        fig, ax = plt.subplots()
-        caz = ax.matshow(self.height_model.array)
-        fig.colorbar(caz)
-
-        container = np.zeros((self.height_model.array.shape[0], self.height_model.array.shape[1], 4))
-        container[:, :, 0][self.detected > 0] = 1
-        container[:, :, 3][self.detected > 0] = 1
-
-        ax.imshow(container)
-
-
-
+        hmplot = HeightModelPlot(self.height_model)
+        hmplot.append_bool(self.detected)
+        plt.show()
