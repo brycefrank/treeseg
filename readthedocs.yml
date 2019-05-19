@@ -1,2 +1,3 @@
 conda:
-    environment: ../environment.yml
+    environment: environment.yml
+    file: environment.yml
