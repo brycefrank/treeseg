@@ -1,5 +1,7 @@
 # treeseg
 
+[![Documentation Status](https://readthedocs.org/projects/treeseg/badge/?version=latest)](https://treeseg.readthedocs.io/en/latest/?badge=latest)
+
 A library of tree segmentation and detection algorithms.
 
 For general LiDAR processing tasks (e.g. normalization, canopy height models, etc.) please see [pyfor](https://github.com/brycefrank/pyfor).
