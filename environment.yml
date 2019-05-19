@@ -7,5 +7,5 @@ dependencies:
     - geopandas
     - rasterio
     - scipy
-    - skimage
+    - scikit-image
     - pyproj
